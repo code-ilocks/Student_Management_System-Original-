@@ -1,11 +1,16 @@
 package Utility.internal;
 
+import students.Student;
+
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import static java.lang.System.out;
 
 public class DatabaseUtil {
     private static Connection connection = null;
-    private static final String url = "jdbc:mysql://localhost/payroll_db?serverTimezone=UTC";
+    private static final String url = "jdbc:mysql://localhost/student_management?serverTimezone=UTC";
     private static final String userName = "root";
     private static final String password = "";
     private static PreparedStatement pst = null;
@@ -191,4 +196,208 @@ public class DatabaseUtil {
         return "";
     }
 
+    public static final Student searchStudent(int idNumber){
+        String query = "SELECT * FROM `student_tbl` WHERE id = ?";
+        Student student = null;
+        try{
+            getConnection();
+            pst = connection.prepareStatement(query);
+            pst.setInt(1,idNumber);
+            rs = pst.executeQuery();
+
+            if(rs.next()){
+                int id = idNumber;
+                String fullname = rs.getString("fullname");
+                int age = rs.getInt("age");
+                String birthPlace = rs.getString("birthplace");
+                String birthDate = rs.getString("birthDate");
+                int isRegular = rs.getInt("regular");
+                String department = rs.getString("department");
+                String course = rs.getString("course");
+                String yearlvl = rs.getString("year_lvl");
+                String address = rs.getString("address");
+                String email = rs.getString("email");
+                String contact = rs.getString("contact");
+                String dateRegistered = rs.getString("date_registered");
+                String father = rs.getString("father");
+                String mother = rs.getString("mother");
+                String guardianContact = rs.getString("guardian_contact");
+                String status = rs.getString("status");
+
+                return new Student(id,fullname,age,birthDate,birthPlace,isRegular,department,course,yearlvl,status,address,email,contact,dateRegistered,father,mother,guardianContact);
+            }
+
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally {
+            closeConnection();
+        }
+
+        return student;
+    }
+
+    public static final void addStudent(Student student){
+        String studentQuery = "insert into student_tbl(fullname, birthdate, age, address, email, contact, birthplace, regular, department, course, year_lvl, status, date_registered, father, mother, guardian_contact) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+        try{
+            getConnection();
+            pst = connection.prepareStatement(studentQuery);
+            pst.setString(1,student.getFullName());
+            pst.setString(2,student.getBirthDate());
+            pst.setInt(3,student.getAge());
+            pst.setString(4,student.getAddress());
+            pst.setString(5,student.getEmail());
+            pst.setString(6,student.getContact());
+            pst.setString(7,student.getBirthPlace());
+            pst.setInt(8,student.isRegular());
+            pst.setString(9,student.getDepartment());
+            pst.setString(10,student.getCourse());
+            pst.setString(11,student.getYearLvl());
+            pst.setString(12,student.getStatus());
+            pst.setString(13,student.getDateRegistered());
+            pst.setString(14,student.getFatherName());
+            pst.setString(15,student.getMotherName());
+            pst.setString(16,student.getContOfGuardian());
+            pst.execute();
+
+            System.out.println("Student Added.");
+
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally{
+            closeConnection();
+        }
+    }
+
+    public static final void enrollStudent(int idNumber, String department, String course, String yearLvl){
+        department += "_department";
+        String getNameQuery = "Select * from student_tbl where id = ?";
+        String enrollStudent = "Insert into " + department + "(student_id,fullname,course,year_lvl) values(?,?,?,?)";
+
+        try{
+            getConnection();
+            pst = connection.prepareStatement(getNameQuery);
+            pst.setInt(1,idNumber);
+            rs = pst.executeQuery();
+            rs.next();
+
+            StringBuilder fullname = new StringBuilder();
+            fullname.append(rs.getString("fullname"));
+
+            pst = connection.prepareStatement(enrollStudent);
+            pst.setInt(1,idNumber);
+            pst.setString(2,fullname.toString());
+            pst.setString(3,course);
+            pst.setString(4,yearLvl);
+            pst.execute();
+
+
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally {
+            try{
+                pst = connection.prepareStatement("update student_tbl set status = 'Enrolled' where student_tbl.id = ?");
+                pst.setInt(1,idNumber);
+                pst.execute();
+            }catch (SQLException ex){
+                ex.printStackTrace();
+            }
+            finally {
+                closeConnection();
+            }
+        }
+    }
+
+    public static final boolean checkIfEnrolled(int idNumber){
+        String query = "Select * from student_tbl where id = ?";
+        try{
+            getConnection();
+            pst = connection.prepareStatement(query);
+            pst.setInt(1,idNumber);
+            rs = pst.executeQuery();
+            rs.next();
+
+            return rs.getString("status").equals("Enrolled");
+
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally {
+            closeConnection();
+        }
+        return true;
+    }
+
+    public static final void deleteStudent(int idNumber, String department){
+        department += "_department";
+        String childrenTable = "delete from " + department + " where student_id = ?";
+        String parentTable = "delete from student_tbl where id = ?";
+
+        try{
+            getConnection();
+            pst = connection.prepareStatement(childrenTable);
+            pst.setInt(1,idNumber);
+            pst.execute();
+            pst = connection.prepareStatement(parentTable);
+            pst.setInt(1,idNumber);
+            pst.execute();
+            out.println("Deletion Successful.");
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally{
+            closeConnection();
+        }
+
+    }
+
+    public static final ArrayList<Student> showStudent(){
+
+        return null;
+    }
+
+    public static final void updateStudent(int id,String fullname,int age,String birthDate,String birthPlace,String address,String email,String contact,boolean regular,String yearLvl,String fatherName,String motherName,String contOfGuardian){
+        String query = "update student_tbl set fullname = ?, age = ?, birthdate = ?, birthplace = ?, address = ?, email = ?, contact = ?, regular = ?,year_lvl = ?, father = ?, mother = ?, guardian_contact = ? where id = " + id;
+
+        try{
+            getConnection();
+            pst = connection.prepareStatement(query);
+            pst.setString(1,fullname);
+            pst.setInt(2,age);
+            pst.setString(3,birthDate);
+            pst.setString(4,birthPlace);
+            pst.setString(5,address);
+            pst.setString(6,email);
+            pst.setString(7,contact);
+            pst.setInt(8,regular ? 1 : 0);
+            pst.setString(9,yearLvl);
+            pst.setString(10,fatherName);
+            pst.setString(11,motherName);
+            pst.setString(12,contOfGuardian);
+            pst.executeUpdate();
+
+            out.println("Update Successful.");
+
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally {
+            closeConnection();
+        }
+
+
+    }
+
+    public static final void shiftStudent(int idNumber,String department, String course, String yearLvl){
+        String query = "update student_tbl set department = " + department + ", course = " + course + ", year_lvl = " + yearLvl + ", where id = ?";
+
+        try{
+            getConnection();
+            pst = connection.prepareStatement(query);
+            pst.setInt(1,idNumber);
+            pst.execute();
+        }catch (SQLException ex){
+            ex.printStackTrace();
+        }finally {
+            closeConnection();
+        }
+
+    }
 }

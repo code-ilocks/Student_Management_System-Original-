@@ -1,6 +1,7 @@
 package Runner;
 
 import Users.Accounts.Accounts;
+import Users.Accounts.admin.Admin;
 
 import java.util.Scanner;
 import static java.lang.System.out;
@@ -20,11 +21,7 @@ public class Runner {
                 String password = scan.next();
 
                 if(Accounts.checkAdmin(id,password)){
-                    //DASHBOARD
-                    String adminName = Accounts.getAdminName(id);
-                    out.println("Welcome, " + adminName + "!");
-
-
+                    new Admin(Accounts.getAdminName(id));
                 }else{
                     out.println("Wrong input.");
                 }

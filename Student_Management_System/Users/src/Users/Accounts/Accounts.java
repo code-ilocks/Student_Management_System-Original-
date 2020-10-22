@@ -4,10 +4,6 @@ import Utility.internal.DatabaseUtil;
 
 public class Accounts{
 
-    public Accounts(){
-
-    }
-
     public Accounts(String id, String pass, String name, String lastName, String email){
         new DatabaseUtil(id, pass, name, lastName, email);
     }
@@ -49,10 +45,6 @@ public class Accounts{
             pass.append(set.charAt((int) (Math.random() * set.length())));
         }
         return pass.toString();
-    }
-
-    public void createUser(){
-
     }
 
 }
